@@ -1,6 +1,6 @@
 
 import * as vscode from "vscode";
-import { DuckdbDataSource } from '../../data/duckdb/DuckdbDataSource';
+import { DuckdbDataSource } from './DuckdbDataSource';
 import { IFieldInfo, ITabularResultSet } from '@ducklab/core';
 import { IControllerOpts } from '../IControllerOpts';
 import path from "path";
@@ -11,7 +11,7 @@ export class DucklabSQLController {
     readonly id = 'ducklab-sql';
     readonly notebookType = 'isql';
     readonly supportedLanguages = ['sql', 'markdown', 'plaintext'];
-    readonly label: string = 'ducklab-sql';
+    readonly label: string = 'SQL Only';
     readonly description?: string | undefined;
     readonly detail?: string | undefined;
     readonly supportsExecutionOrder?: boolean | undefined = true;
@@ -48,14 +48,28 @@ export class DucklabSQLController {
         }
     }
 
+    private async showNotification(message: string) {
+
+    }
+
+
     public async resolveKernel(notebook: vscode.NotebookDocument) {
+
         const nbId = getResourceId(notebook.uri);
+
         if (!(nbId in this.kernels)) {
-            this.kernels[nbId] = new DuckdbDataSource(nbId, {
-                dataSearchPath: this.opts.workingDir,
-                dbPath: path.join(this.opts.tempPath, "ducklab", nbId + ".db")
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Initializing Kernel...",
+            }, async (progress) => {
+                this.kernels[nbId] = new DuckdbDataSource(nbId, {
+                    dataSearchPath: this.opts.workingDir,
+                    dbPath: path.join(this.opts.tempPath, "ducklab", nbId + ".db")
+                });
+                await this.kernels[nbId].connect();
+                progress.report({ message: "Loading Default Extensions..." });
+                await this.kernels[nbId].loadExtensions();
             });
-            await this.kernels[nbId].connect();
         }
         return this.kernels[nbId];
     }
@@ -75,10 +89,19 @@ export class DucklabSQLController {
         Object.keys(this.kernels).map(k => this.kernels[k].dispose());
     }
 
+    private parseJsType(value: any, column: IFieldInfo) {
+        switch (column.type) {
+            case "datetime":
+                return new Date(value).toISOString();
+            default:
+                return value;
+        }
+    }
+
     private getRow(cols: IFieldInfo[], obj: any) {
         let row = "";
         for (let k of cols) {
-            row += `<td>${obj[k.name]}</td>`;
+            row += `<td>${this.parseJsType(obj[k.name], k)}</td>`;
         }
         return `<tr>${row}</tr>`;
     }
@@ -116,14 +139,13 @@ export class DucklabSQLController {
     }
 
     private async _doExecution(cell: vscode.NotebookCell, kernel: DuckdbDataSource): Promise<void> {
-        console.log("Executing: ", cell.document.getText());
+        console.log("Executing...");
         const execution = this._controller.createNotebookCellExecution(cell);
         execution.executionOrder = ++this._executionOrder;
         execution.start(Date.now()); // Keep track of elapsed time to execute cell.
 
         try {
             const results = await kernel.queryNative(cell.document.getText());
-            console.log("results: ", results);
 
             let text = this.renderTable(results);
 

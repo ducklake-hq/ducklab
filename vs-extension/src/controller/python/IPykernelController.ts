@@ -1,6 +1,6 @@
 
 import * as vscode from "vscode";
-import { DuckdbDataSource } from '../../data/duckdb/DuckdbDataSource';
+import { DuckdbDataSource } from '../nodejs/DuckdbDataSource';
 import { IFieldInfo, ITabularResultSet } from '@ducklab/core';
 import { PythonExtension } from '@vscode/python-extension';
 import { IKernelSpec as IKernelSpec, KernelType } from './IKernelSpec';

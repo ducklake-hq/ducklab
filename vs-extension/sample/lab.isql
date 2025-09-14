@@ -2,16 +2,16 @@
 
 select * from mytable1232
 -- %% SQL_RAW | unnamed
-create or replace view myview as (select *
 
-from read_csv_auto("data/MOCK_DATA.csv")
-limit 10
+create or replace view myview as (
+    select *
+    from "vs-extension/sample/data/MOCK_DATA.csv"
+    limit 10
 );
 
 select * from myview;
 
 -- %% SQL_RAW | unnamed
-select * from myview
 
 -- %% SQL_RAW | unnamed
 SET memory_limit = '16GB';
@@ -32,7 +32,7 @@ select * from 'data/MOCK_DATA.csv';
 
 -- %% SQL_RAW | unnamed
 
-select * from 'extension/src/mount-s3/housing_data/housing_data.parquet'
+-- select * from 'extension/src/mount-s3/housing_data/housing_data.parquet'
 
 -- %% PYTHON | unnamed
 import time
@@ -42,7 +42,7 @@ time.sleep(3)
 print("Hello from python2")
 time.sleep(3)
 print("Hello from python3")
-asd
+
 -- %% PYTHON | unnamed
 import pandas as pd
 

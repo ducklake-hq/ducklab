@@ -16,7 +16,7 @@ export class DucklabPythonController implements IDisposable {
     readonly id = 'ducklab';
     readonly notebookType = 'isql';
     readonly supportedLanguages = ['sql', 'markdown', 'plaintext', 'python'];
-    readonly label: string = 'ducklab-python';
+    readonly label: string = 'Python/SQL';
     readonly description?: string | undefined;
     readonly detail?: string | undefined;
     readonly supportsExecutionOrder = true;

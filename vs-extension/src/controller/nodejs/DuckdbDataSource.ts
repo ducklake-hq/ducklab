@@ -8,8 +8,8 @@ import {
   TabularDataSource,
   type ITabularExecuteOpts,
 } from '@ducklab/core';
-import * as arrow from 'apache-arrow';
-import { Database } from "./duckdb-async";
+import { DuckDBConnection, DuckDBInstance, DuckDBMaterializedResult, DuckDBType, DuckDBTypeId } from "@duckdb/node-api";
+
 
 // polyfill
 (BigInt.prototype as any).toJSON = function () {
@@ -19,13 +19,12 @@ import { Database } from "./duckdb-async";
 export class DuckdbDataSource extends TabularDataSource {
   private _tr: SqlTranslator;
   public readonly opts: Required<DuckOptions>;
-  private _db: Database | null = null;
+  private _db: DuckDBConnection | null = null;
 
   constructor(name: string, duckOpts: DuckOptions) {
     super(name);
     this._tr = new SqlTranslator();
     this.opts = {
-      supportedTypes: [".csv", ".parquet"],
       batchSize: 10000,
       previewLimit: 1000,
       rawLimit: -1,
@@ -37,9 +36,8 @@ export class DuckdbDataSource extends TabularDataSource {
   }
 
   public async _init() {
-    console.log("Init duckdb");
-    const db = await Database.create(this.opts.dbPath);
-    await db.exec(`set file_search_path='${this.opts.dataSearchPath}';`);
+    const db = await (await DuckDBInstance.create(this.opts.dbPath)).connect();
+    await db.run(`set file_search_path='${this.opts.dataSearchPath}';`);
     console.log("Init duckdb: ", db);
     return db;
   }
@@ -57,10 +55,9 @@ export class DuckdbDataSource extends TabularDataSource {
       this._db = await this._init();
     }
     await this.test();
-    await this.loadExtensions();
   }
 
-  private async loadExtensions(): Promise<void> {
+  public async loadExtensions(): Promise<void> {
     for (const ext of this.opts.extensions ?? []) {
       const res = await this.queryNative(`INSTALL ${ext}\nLOAD ${ext}`);
       console.log(`Loaded: ${ext}`, res);
@@ -74,17 +71,15 @@ export class DuckdbDataSource extends TabularDataSource {
     if (!this._db) {
       throw Error("Database could not be initialized");
     }
-    const res = await this._db.all(query);
-    console.log("Response: ", res);
-    if (res.length === 0) {
+    const res = await this._db.run(query);
+    if (res.rowCount === 0) {
       return {
         columns: [],
         values: []
       };
     }
     else {
-      const arrowRes = arrow.tableFromJSON(res);
-      const transformed = this.transformResultset(arrowRes);
+      const transformed = await this.transformResultset(res);
       return transformed;
     }
 
@@ -94,31 +89,32 @@ export class DuckdbDataSource extends TabularDataSource {
   }
 
 
-  getJsonType(type: any) {
-    if (arrow.DataType.isInt(type)) return "number";
-    if (arrow.DataType.isFloat(type)) return "number";
-    if (arrow.DataType.isDecimal(type)) return "number";
-    if (arrow.DataType.isBool(type)) return "boolean";
-    if (arrow.DataType.isDate(type)) return "datetime";
+  getJsonType(type: DuckDBType) {
+    if ([DuckDBTypeId.INTEGER, DuckDBTypeId.FLOAT, DuckDBTypeId.DOUBLE, DuckDBTypeId.DECIMAL].includes(type.typeId)) return "number";
+    if ([DuckDBTypeId.BOOLEAN, DuckDBTypeId.BIT].includes(type.typeId)) return "boolean";
+    if ([
+      DuckDBTypeId.TIMESTAMP,
+      DuckDBTypeId.TIMESTAMP_TZ,
+      DuckDBTypeId.TIMESTAMP_NS,
+      DuckDBTypeId.TIMESTAMP_S,
+      DuckDBTypeId.TIMESTAMP_MS
+    ].includes(type.typeId)) return "datetime";
     return "string";
   }
 
-  private transformResultset(resultset: any): ITabularResultSet {
-    console.log("Transforming: ", resultset);
-    const items: any[] = [];
+  private async transformResultset(resultset: DuckDBMaterializedResult): Promise<ITabularResultSet> {
+    let items: any[] = [];
     const columns: IFieldInfo[] = [];
-    if (!resultset.schema.fields) {
-      resultset.schema.fields = {};
-    }
-    for (const col of resultset.schema.fields) {
+    const columnNames = resultset.columnNames();
+    const columnTypes = resultset.columnTypes();
+    for (const i in columnNames) {
       columns.push({
-        name: col.name,
-        type: this.getJsonType(col.type),
+        name: columnNames[i],
+        type: this.getJsonType(columnTypes[i]),
       });
     }
-    for (let i = 0; i < resultset.numRows; i++) {
-      items.push({ _index: i, ...resultset.get(i).toJSON() });
-    }
+    items = await resultset.getRowObjectsJS();
+    items = items.map((item, index) => ({ _index: index, ...item }));
     return {
       columns: columns,
       values: items,
@@ -140,7 +136,6 @@ export class DuckdbDataSource extends TabularDataSource {
 
   public async queryNative(query: string, limit?: number) {
     const result = await this.executeNative(query);
-    console.log("executed: ", result);
     if (limit != null && limit >= 0 && result.values.length >= limit) {
       result.values = result.values.slice(0, limit);
     }
@@ -159,7 +154,6 @@ export class DuckdbDataSource extends TabularDataSource {
       throw Error("Query must be provided");
     }
     const sql = this._tr.translate(params.query, limit ?? this.opts.previewLimit, offset);
-    console.log(sql);
     return await this.queryNative(sql);
   }
 
@@ -174,7 +168,6 @@ export class DuckdbDataSource extends TabularDataSource {
         from INFORMATION_SCHEMA.COLUMNS
         where TABLE_SCHEMA not in ('pg_catalog', 'temp');
         `);
-    console.log(results);
     return this.createDatasets(results);
   }
 
@@ -204,14 +197,13 @@ export class DuckdbDataSource extends TabularDataSource {
   }
 
   dispose() {
-    this._db?.close();
+    this._db?.closeSync();
   }
 }
 
 export interface DuckOptions {
   batchSize?: number;
   extensions?: string[];
-  supportedTypes?: string[];
   previewLimit?: number;
   rawLimit?: number;
   dbPath?: string;

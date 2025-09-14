@@ -15,7 +15,7 @@ export class DucklabSparkController implements IDisposable {
     readonly id = 'ducklab-spark';
     readonly notebookType = 'isql';
     readonly supportedLanguages = ['sql', 'markdown', 'plaintext', 'python'];
-    readonly label: string = 'ducklab-spark';
+    readonly label: string = 'PySpark/SQL';
     readonly description?: string | undefined;
     readonly detail?: string | undefined;
     readonly supportsExecutionOrder = true;

@@ -2,7 +2,7 @@
   "name": "ducklab",
   "displayName": "Ducklab",
   "description": "Interactive SQL/Python Notebooks. Powered by DuckDB",
-  "version": "0.4.4",
+  "version": "0.5.0",
   "license": "Apache-2.0",
   "publisher": "ducklake",
   "icon": "./assets/logo_dark.png",
@@ -17,7 +17,7 @@
     "test": "jest"
   },
   "engines": {
-    "vscode": "^1.61.0"
+    "vscode": "^1.85.0"
   },
   "keywords": [
     "notebookKernelIsql",
@@ -37,11 +37,6 @@
   ],
   "type": "commonjs",
   "main": "./out/index.js",
-  "binary": {
-    "module_name": "duckdb",
-    "module_path": "./lib/binding/",
-    "host": "https://npm.duckdb.org/duckdb"
-  },
   "activationEvents": [
     "onNotebook:ipynb-ducklab",
     "onNotebook:isql"
@@ -78,41 +73,41 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@mapbox/node-pre-gyp": "^1.0.11",
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^22.5.0",
-    "@types/vscode": "^1.58.0",
+    "@types/vscode": "1.85.0",
     "@types/vscode-notebook-renderer": "^1.72.3",
     "@vscode/jupyter-extension": "^1.1.1",
-    "@vscode/python-extension": "^1.0.5",
+    "@vscode/python-extension": "1.0.5",
     "@vscode/vsce": "^3.2.1",
     "jest": "^29.7.0",
     "rollup": "^4.20.0",
     "rollup-plugin-copy": "^3.5.0",
-    "rollup-plugin-delete": "^2.0.0",
-    "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-delete": "^3.0.1",
+    "rollup-plugin-dts": "^6.2.3",
     "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.0",
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@ducklab/core": "0.3.18",
-    "@nteract/messaging": "^7.0.20",
-    "apache-arrow": "^17.0.0",
-    "aws-sdk": "^2.1685.0",
-    "duckdb": "^1.1.1",
-    "duckdb-async": "^1.0.0",
-    "get-port": "^7.1.0",
-    "mock-aws-s3": "^4.0.2",
-    "nock": "^13.5.5",
-    "split2": "^4.2.0",
+    "@duckdb/node-api": "1.3.2-alpha.26",
+    "@duckdb/node-bindings": "1.3.2-alpha.26",
+    "@duckdb/node-bindings-win32-x64": "1.3.2-alpha.26",
+    "@duckdb/node-bindings-linux-x64": "1.3.2-alpha.26",
+    "@duckdb/node-bindings-linux-arm64": "1.3.2-alpha.26",
+    "@duckdb/node-bindings-darwin-x64": "1.3.2-alpha.26",
+    "@duckdb/node-bindings-darwin-arm64": "1.3.2-alpha.26",
+    "@ducklab/core": "../core/ducklab-core-0.4.0.tgz",
+    "@nteract/messaging": "7.0.*",
+    "apache-arrow": "17.0.*",
+    "get-port": "7.1.0",
     "vscode-notebook-error-overlay": "^1.0.1",
-    "vscode-uri": "^3.0.8",
-    "zeromq": "^6.0.4"
+    "vscode-uri": "3.1.*",
+    "zeromq": "6.5.0"
   }
 }
