@@ -7,18 +7,18 @@ on:
       - core/v*
 
 jobs:
-  build_deploy:
+  publish-npm:
+    environment: "npm-publish"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 20
-      - working-directory: ./core
+          registry-url: https://registry.npmjs.org/
+      - run: npm i -g pnpm
+      - run: pnpm i
+      - run: pnpm run build
+      - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.DUCKLAB_NPM_KEY}}
-        run: |
-          npm i -g pnpm
-          pnpm install
-          pnpm run build
-          npm publish
+          NODE_AUTH_TOKEN: ${{secrets.DUCKLAB_NPM_TOKEN}}
