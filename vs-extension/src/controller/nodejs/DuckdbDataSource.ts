@@ -85,20 +85,17 @@ export class DuckdbDataSource extends TabularDataSource {
 
   }
 
-  public async reset() {
-  }
-
-
   getJsonType(type: DuckDBType) {
     if ([DuckDBTypeId.INTEGER, DuckDBTypeId.FLOAT, DuckDBTypeId.DOUBLE, DuckDBTypeId.DECIMAL].includes(type.typeId)) return "number";
     if ([DuckDBTypeId.BOOLEAN, DuckDBTypeId.BIT].includes(type.typeId)) return "boolean";
+    if ([DuckDBTypeId.DATE].includes(type.typeId)) return "date";
     if ([
       DuckDBTypeId.TIMESTAMP,
-      DuckDBTypeId.TIMESTAMP_TZ,
       DuckDBTypeId.TIMESTAMP_NS,
       DuckDBTypeId.TIMESTAMP_S,
       DuckDBTypeId.TIMESTAMP_MS
     ].includes(type.typeId)) return "datetime";
+    if ([DuckDBTypeId.TIMESTAMP_TZ].includes(type.typeId)) return "datetime_tz";
     return "string";
   }
 
@@ -111,6 +108,7 @@ export class DuckdbDataSource extends TabularDataSource {
       columns.push({
         name: columnNames[i],
         type: this.getJsonType(columnTypes[i]),
+        nativeType: columnTypes[i]
       });
     }
     items = await resultset.getRowObjectsJS();

@@ -5,14 +5,20 @@ select * from mytable1232
 
 create or replace view myview as (
     select *
-    from "vs-extension/sample/data/MOCK_DATA.csv"
+    from "data/MOCK_DATA.csv"
     limit 10
 );
 
 select * from myview;
 
 -- %% SQL_RAW | unnamed
+%view myview2
 
+select *
+from "data/MOCK_DATA.csv"
+limit 3
+-- %% SQL_RAW | unnamed
+select * from myview2
 -- %% SQL_RAW | unnamed
 SET memory_limit = '16GB';
 SET memory_limit = '12GB';
@@ -76,6 +82,14 @@ df = df.select(
 display(df)
 -- %% PYTHON | unnamed
 df.createOrReplaceTempView("myview")
+-- %% SQL_RAW | unnamed
+%view myview2
+
+select *
+from myview
+limit 3
+-- %% SQL_RAW | unnamed
+select * from myview
 -- %% SQL_RAW | unnamed
 select * from myview
 -- %% PYTHON | unnamed

@@ -27,6 +27,7 @@
 - [🔥 Features ](#-features-)
 - [🏁 Getting Started ](#-getting-started-)
   - [Using Ducklab SQL Kernel (no dependencies required)](#using-ducklab-sql-kernel-no-dependencies-required)
+    - [Using Cell Magics](#using-cell-magics)
   - [Using Ducklab Python Kernel](#using-ducklab-python-kernel)
   - [Using Ducklab Spark Kernel](#using-ducklab-spark-kernel)
   - [Import Databricks Notebook](#import-databricks-notebook)
@@ -48,22 +49,28 @@ DuckLab for VS Code provides data analysis features for SQL, PySpark and Python.
 - Use any python, venv or conda environment detected by VS Code Python extension.
 - Git-friendly `.isql` format. This format is plain text and human readable. 
 - Ducklab doesn't use `ipynb` format which stores cell outputs in the file and pollutes git. It also makes diff in pull requests unreadable.
+- Cell magics for convenience.
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
 
 ### Using Ducklab SQL Kernel (no dependencies required)
 
 1. Create a new `.isql` file.
-2. Select kernel `ducklab-sql`
+2. Select kernel `SQL Only`
 3. Run SQL queries e.g. `select * from 'data/MOCK_DATA.csv';`
 
 <img src="./assets/sql_query.png">
+
+#### Using Cell Magics
+
+- Use '%view myview' cell magic to create a view from your SELECT query and preview the results.
+<img src="./assets/screenshot_2.png">
 
 ### Using Ducklab Python Kernel
 
 1. Make sure python or Anaconda is installed.
 2. Create a new `.isql` file.
-3. Select kernel `ducklab-python`
+3. Select kernel `Python/SQL`
 4. Select Python environment from bottom-right corner
 5. `ducklab-python` kernel will have `db` variable (duckdb connection) already initialized for you.
 6. Run python or SQL code
@@ -72,7 +79,7 @@ DuckLab for VS Code provides data analysis features for SQL, PySpark and Python.
 
 1. Make sure python or Anaconda is installed.
 2. Create a new `.isql` file.
-3. Select kernel `ducklab-spark`
+3. Select kernel `PySpark/SQL`
 4. Select Python environment from bottom-right corner
 5. `ducklab-spark` kernel will have `spark` variable (SparkSession) already initialized for you.
 6. Run spark code,
