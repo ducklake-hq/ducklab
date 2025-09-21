@@ -1,13 +1,13 @@
 .vscode/**
 .vscode-test/**
 dist/
-src/**
+src/
 .gitignore
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
-sample/**
+sample/
 node_modules/
 ./*.sh
 ./*.ps1

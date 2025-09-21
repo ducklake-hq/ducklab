@@ -1,3 +1,6 @@
-out
-prebuilds
-lib
+out/
+prebuilds/
+lib/
+build/
+@duckdb/
+*.tgz

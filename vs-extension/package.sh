@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # Clear previous builds
 rm -rf ./dist
 mkdir ./dist
@@ -15,19 +13,24 @@ targets=(
     "darwin-arm64"
 )
 
-cp -rf ./node_modules/zeromq/prebuilds ./
-
+cp -rf ./node_modules/zeromq/build ./
 
 for p in ${targets[@]}; do
     platform=$(echo $p | cut -d "-" -f 1)
     arch=$(echo $p | cut -d "-" -f 2)
-
-    npx node-pre-gyp install --directory ./node_modules/duckdb --target_platform=$platform --target_arch=$arch --update-binary
-
-    mkdir -p ./lib/binding
-    cp -rf ./node_modules/duckdb/lib/binding/duckdb.node ./lib/binding/
-    
-    # Package extension
+ 
+    # # Package extension
     npx vsce package --no-dependencies --target $platform-$arch --out ./dist --baseContentUrl https://raw.githubusercontent.com/ducklake-hq/ducklab/refs/heads/main/vs-extension/ --baseImagesUrl https://raw.githubusercontent.com/ducklake-hq/ducklab/refs/heads/main/vs-extension/
+    files=(dist/*.vsix)
+
+    unzip "${files[0]}" -d dist/extracted/
+    mkdir -p dist/extracted/extension/node_modules/@duckdb/node-bindings-$platform-$arch
+    cp -rL node_modules/@duckdb/node-bindings-$platform-$arch dist/extracted/extension/node_modules/@duckdb/
+    # rm ${files[0]}
+    cd dist/extracted/
+    zip -r "../../${files[0]}" ./
+    cd ../../
+    # zip -ur "${files[0]}" extension/ node_modules/@duckdb/node-bindings/
+    rm -r dist/extracted/
 
 done

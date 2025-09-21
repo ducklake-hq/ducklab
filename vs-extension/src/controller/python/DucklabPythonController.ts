@@ -16,7 +16,7 @@ export class DucklabPythonController implements IDisposable {
     readonly id = 'ducklab';
     readonly notebookType = 'isql';
     readonly supportedLanguages = ['sql', 'markdown', 'plaintext', 'python'];
-    readonly label: string = 'ducklab-python';
+    readonly label: string = 'Python/SQL';
     readonly description?: string | undefined;
     readonly detail?: string | undefined;
     readonly supportsExecutionOrder = true;
@@ -74,7 +74,6 @@ export class DucklabPythonController implements IDisposable {
     }
 
     async executeHandler(cells: vscode.NotebookCell[], notebook: vscode.NotebookDocument, controller: vscode.NotebookController) {
-        console.log("Execute: ", notebook);
         try {
             let kernel = await this.kSelector.resolveKernel(notebook);
             for (let cell of cells) {
@@ -147,10 +146,18 @@ export class DucklabPythonController implements IDisposable {
                 resEmitter = await kernel.execute(cell.document.getText());
             }
             if (cell.document.languageId.toLowerCase() === "sql") {
-                resEmitter = await kernel.execute(`db.query("""${cell.document.getText()}""")`);
+                let cellText = cell.document.getText();
+                const rx = /^[%]view ([a-zA-Z0-9_]+)/;
+                const match = cellText.split('\n')[0].match(rx);
+                if (match) {
+                    const tblName = match[1];
+                    const queryText = cellText.split('\n').slice(1).join('\n');
+                    cellText = `CREATE OR REPLACE VIEW "${tblName}" AS (${queryText})\n; SELECT * FROM "${tblName}"`;
+                }
+                console.debug("[Ducklab] Running: ", cellText);
+                resEmitter = await kernel.execute(`db.query(${JSON.stringify(cellText)})`);
             }
             resEmitter.on(async (event) => {
-                console.log("Result: ", cell.index, event.msgType, event.content);
                 if (event.msgType === MessageType.Output) {
                     const msg = (event as OutputMessage);
 

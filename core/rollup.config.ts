@@ -21,7 +21,7 @@ const config = [
         output: {
             name: 'dlab.core',
             file: 'dist/index.js',
-            format: 'umd',
+            format: 'es',
         },
     },
     {

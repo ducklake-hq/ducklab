@@ -1,21 +1,21 @@
 
 import * as vscode from "vscode";
-import { DuckdbDataSource } from '../../data/duckdb/DuckdbDataSource';
+import { DuckdbDataSource } from './DuckdbDataSource';
 import { IFieldInfo, ITabularResultSet } from '@ducklab/core';
 import { IControllerOpts } from '../IControllerOpts';
 import path from "path";
 import { getResourceId } from '../utils';
+import { DuckDBTypeId } from '@duckdb/node-api';
 
 export class DucklabSQLController {
 
     readonly id = 'ducklab-sql';
     readonly notebookType = 'isql';
     readonly supportedLanguages = ['sql', 'markdown', 'plaintext'];
-    readonly label: string = 'ducklab-sql';
+    readonly label: string = 'SQL Only';
     readonly description?: string | undefined;
     readonly detail?: string | undefined;
     readonly supportsExecutionOrder?: boolean | undefined = true;
-
 
     public readonly opts: IControllerOpts;
     private readonly _controller: vscode.NotebookController;
@@ -48,14 +48,28 @@ export class DucklabSQLController {
         }
     }
 
+    private async showNotification(message: string) {
+
+    }
+
+
     public async resolveKernel(notebook: vscode.NotebookDocument) {
+
         const nbId = getResourceId(notebook.uri);
+
         if (!(nbId in this.kernels)) {
-            this.kernels[nbId] = new DuckdbDataSource(nbId, {
-                dataSearchPath: this.opts.workingDir,
-                dbPath: path.join(this.opts.tempPath, "ducklab", nbId + ".db")
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Initializing Kernel...",
+            }, async (progress) => {
+                this.kernels[nbId] = new DuckdbDataSource(nbId, {
+                    dataSearchPath: this.opts.workingDir,
+                    dbPath: path.join(this.opts.tempPath, "ducklab", nbId + ".db")
+                });
+                await this.kernels[nbId].connect();
+                progress.report({ message: "Loading Default Extensions..." });
+                await this.kernels[nbId].loadExtensions();
             });
-            await this.kernels[nbId].connect();
         }
         return this.kernels[nbId];
     }
@@ -75,10 +89,24 @@ export class DucklabSQLController {
         Object.keys(this.kernels).map(k => this.kernels[k].dispose());
     }
 
+    private parseJsType(value: any, column: IFieldInfo) {
+        console.log("Data Type: ", column, value, typeof value);
+        switch (column.type) {
+            case "datetime":
+                return new Date(value).toLocaleString('sv', { timeZone: 'UTC' }) + "Z";
+            case "datetime_tz":
+                return new Date(value).toLocaleString('sv', { timeZoneName: "shortOffset" }).replace(" GMT", "");
+            case "date":
+                return new Date(value).toISOString().split("T")[0];
+            default:
+                return value;
+        }
+    }
+
     private getRow(cols: IFieldInfo[], obj: any) {
         let row = "";
         for (let k of cols) {
-            row += `<td>${obj[k.name]}</td>`;
+            row += `<td>${this.parseJsType(obj[k.name], k)}</td>`;
         }
         return `<tr>${row}</tr>`;
     }
@@ -116,14 +144,22 @@ export class DucklabSQLController {
     }
 
     private async _doExecution(cell: vscode.NotebookCell, kernel: DuckdbDataSource): Promise<void> {
-        console.log("Executing: ", cell.document.getText());
         const execution = this._controller.createNotebookCellExecution(cell);
         execution.executionOrder = ++this._executionOrder;
         execution.start(Date.now()); // Keep track of elapsed time to execute cell.
 
         try {
-            const results = await kernel.queryNative(cell.document.getText());
-            console.log("results: ", results);
+            let cellText = cell.document.getText();
+            const rx = /^[%]view ([a-zA-Z0-9_]+)/;
+            const match = cellText.split('\n')[0].match(rx);
+            if (match) {
+                const tblName = match[1];
+                const queryText = cellText.split('\n').slice(1).join('\n');
+                cellText = `CREATE OR REPLACE VIEW "${tblName}" AS (${queryText})\n; SELECT * FROM "${tblName}"`;
+            }
+            console.debug("[Ducklab] Running: ", cellText);
+            const results = await kernel.queryNative(cellText);
+            console.debug("[Ducklab] Results: ", results);
 
             let text = this.renderTable(results);
 

@@ -1,6 +1,6 @@
 {
   "name": "@ducklab/core",
-  "version": "0.3.19",
+  "version": "0.4.1",
   "scripts": {
     "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "test": "jest tests/"
@@ -11,6 +11,7 @@
   "files": [
     "dist"
   ],
+  "type": "module",
   "main": "index.js",
   "types": "dist/index.d.ts",
   "license": "Apache-2.0",
