@@ -30,8 +30,8 @@ importers:
         specifier: 1.4.0-r.1
         version: 1.4.0-r.1
       '@ducklab/core':
-        specifier: ../core/ducklab-core-0.4.1.tgz
-        version: file:../core/ducklab-core-0.4.1.tgz
+        specifier: 0.4.1
+        version: 0.4.1
       '@nteract/messaging':
         specifier: 7.0.*
         version: 7.0.20
@@ -366,9 +366,8 @@ packages:
   '@duckdb/node-bindings@1.4.0-r.1':
     resolution: {integrity: sha512-XyVgC2ab3DyztoIdcZ1XEckShPYoo8nPyEawwtK0/T//ouayLxwYdpSP87Zgx9AVtv345n5PZInVYUNbUGaKuQ==}
 
-  '@ducklab/core@file:../core/ducklab-core-0.4.1.tgz':
-    resolution: {integrity: sha512-MiBTvqBTcl0pUF066b8w9ZC2VbXUiMT5l0ly358fdaPHZ3VIO8VE1wH73F9yx5XwtVHgLZyt3A6CYmaX71wAPg==, tarball: file:../core/ducklab-core-0.4.1.tgz}
-    version: 0.4.1
+  '@ducklab/core@0.4.1':
+    resolution: {integrity: sha512-esf+13blqGlqYjZh176twOe26+RmqjHU2pKjIzynMfbtza5CBcnSt3GIh41wbs4p6S9QdOls/+lzYx9o01Lqtg==}
 
   '@isaacs/balanced-match@4.0.1':
     resolution: {integrity: sha512-yzMTt9lEb8Gv7zRioUilSglI0c0smZ9k5D65677DLWLtWJaXIS3CqcGyUFByYKlnUj6TkjLVs54fBl6+TiGQDQ==}
@@ -3043,7 +3042,7 @@ snapshots:
       '@duckdb/node-bindings-linux-x64': 1.4.0-r.1
       '@duckdb/node-bindings-win32-x64': 1.4.0-r.1
 
-  '@ducklab/core@file:../core/ducklab-core-0.4.1.tgz': {}
+  '@ducklab/core@0.4.1': {}
 
   '@isaacs/balanced-match@4.0.1': {}
 
