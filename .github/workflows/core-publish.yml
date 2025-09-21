@@ -8,17 +8,20 @@ on:
 
 jobs:
   publish-npm:
-    environment: "npm-publish"
+    environment: "ducklab-npm"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org/
-      - run: npm i -g pnpm
-      - run: pnpm i
-      - run: pnpm run build
-      - run: npm publish
+      - name: publish
+        working-directory: ./core
         env:
           NODE_AUTH_TOKEN: ${{secrets.DUCKLAB_NPM_TOKEN}}
+        run: |
+          npm i -g pnpm
+          pnpm i
+          pnpm run build
+          pnpm publish
